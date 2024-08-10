@@ -1,0 +1,83 @@
+import time
+import random
+import requests
+import numpy as np
+from ssl import SSLError
+from bs4 import BeautifulSoup
+from bs4.element import Tag
+from requests import ConnectionError
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+}
+
+url = 'https://www.homedepot.com/sitemap/d/plp_sitemap.xml'
+response = requests.get(url, headers=headers)
+data = response.text
+soup = BeautifulSoup(data)
+groups = soup.find_all('loc')
+out = [group.text for group in groups]
+comp = []
+for url in out:
+    response = requests.get(url, headers=headers)
+    data = response.text
+    soup = BeautifulSoup(data)
+    links = soup.find_all('loc')
+    comp += [link.text for link in links]
+
+group_urls = list(set(comp))
+
+product_urls = []
+skips = []
+count = 0
+for url in group_urls:
+    count += 1
+    print(count)
+    current = url # keeps the original for indexing where we're at if error
+    while url:
+        if type(url) == Tag:
+            print('~next!')
+            url = f"https://www.homedepot.com{url['href']}"
+        if url[:4] != 'http':
+            url = f"https://www.homedepot.com{url}"
+        try:
+            response = requests.get(url, headers=headers)
+        except UnicodeDecodeError:
+            skips.append(url)
+            break
+        except ConnectionError:
+            print('sleeping...ConnectionError')
+            time.sleep(600)
+            response = requests.get(url, headers=headers)
+        except SSLError:
+            print('sleeping...SSLError')
+            time.sleep(600)
+            response = requests.get(url, headers=headers)
+        data = response.text
+        soup = BeautifulSoup(data)
+        content = soup.find("div", {"class": "mainContent"})
+        if not content:
+            break
+        loads = content.find_all("a", {'data-pod-type': 'pr'})
+        product_urls = product_urls + [load['href'] for load in loads]
+        url = content.find('a', {'class':'hd-pagination__link','title':'Next'})
+
+
+#☻
+print('☻'*47)
+
+np.save('check_urls.npy',list(set(product_urls)))
+
+# some URLs came in as collections, ~1200
+collect = []
+for t in total:
+    if t[:3] != '/p/':
+        collect.append(t)
+
+# make file to open many tabs at once
+rand = random.sample(total, 10)
+with open('open_home_depot_links_1.bat','w') as bat_file:
+    for x in rand:
+        bat_file.write(f"start chrome.exe https://www.homedepot.com{x}\n")
+        print(f"`https://www.homedepot.com{x}`")
+        print('*'*50)
