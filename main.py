@@ -1,16 +1,13 @@
-from selenium import webdriver
-import csv
-import os
+from costco import scrape_costco
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+import csv
+import os
 from home_depot import scrape_home_depot
 from lowes import scrape_lowes
-from costco import scrape_costco
 from models import Product
 
+from common_imports import *
 
 
 
